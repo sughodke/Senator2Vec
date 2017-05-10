@@ -4,10 +4,13 @@ from collections import defaultdict
 
 from sklearn.externals import joblib
 
+# TODO make these defaults otherwise read from sys.args
 only_bills = False
+house = 's'  # h
+
 NAY = -1
 YEA = +1
-house = 's'  # h
+
 adj = defaultdict(dict)
 
 for fname in glob.glob("congress/**/**/**/{}**/*json".format(house)):
@@ -35,14 +38,14 @@ for fname in glob.glob("congress/**/**/**/{}**/*json".format(house)):
             for y in yeas:
                 adj[bill_num][y] = YEA
         else:
-            vote_id = blob['vote_id']
+            vote_id = '{}-{}'.format(blob['congress'], blob['vote_id'])
             for option, voters in enumerate(votes.values()):
                 # retain only the pretty name of the voters
                 voters = map(lambda x: x['display_name'] if isinstance(x, dict) else x, voters)
 
                 for voter in voters:
-                    if '(' in voter:
-                        adj[vote_id][voter] = option
+                    if '(' in voter:  # TODO better pattern match for expected Congressman format
+                        adj[vote_id][voter] = option + 1
 
 
 joblib.dump(adj, '{}-voting-matrix.npy'.format(house))
